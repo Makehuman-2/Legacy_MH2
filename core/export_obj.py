@@ -13,7 +13,7 @@ import numpy as np
 
 class objExport:
     def __init__(self, glob, exportfolder, imagefolder="textures", hiddenverts=False, onground=True, helper=False,
-            normals=False, animation=False, saveprops=False, scale=0.1):
+            normals=False, saveprops=False, scale=0.1):
 
         self.imagefolder = imagefolder
         self.exportfolder = exportfolder
@@ -25,7 +25,6 @@ class objExport:
         self.lowestPos = 0.0
         self.normals = normals
         self.helper = helper
-        self.animation = animation
         self.saveprops = saveprops
 
         self.coordlines = []
@@ -39,6 +38,10 @@ class objExport:
 
         self.obj = []
 
+    def matName(self, num, matname):
+        raw_name = matname if  matname is not None else "material"
+        name = "{}_{:03d}".format(self.env.normalizeName(raw_name), num)
+        return name
 
     def copyImage(self, source, dest):
         self.env.logLine(8, "Need to copy " + source + " to " + dest)
@@ -78,7 +81,8 @@ class objExport:
         self.obj[num]["lenUV"] = len(mcoord)
 
     def addFaces(self, num, name, material, vpf, faces, ov):
-        self.facelines.append("usemtl " + material.name + "\n")
+        matname = self.matName(num, material.name)
+        self.facelines.append("usemtl " + matname + "\n")
         self.facelines.append("g " + name + "\n")
 
         # --- overflow array is defined as pairs
@@ -142,7 +146,8 @@ class objExport:
         metal = getattr(material, "metallicFactor", 0.0)
 
         self.matlines.append("\n")
-        self.matlines.append("newmtl " + material.name + "\n")
+        matname = self.matName(num, material.name)
+        self.matlines.append("newmtl " + matname + "\n")
 
         # --- Pass direct unpacked floating point values into the templates ---
         self.matlines.append("Kd %.4f %.4f %.4f\n" % (d_r, d_g, d_b))

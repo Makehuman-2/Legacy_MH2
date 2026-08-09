@@ -62,6 +62,7 @@ class globalObjects():
         self.reset()
 
     def reset(self):
+        self.wireframemode = 1 if self.env.osindex == 2 else 0 # wireframe mode, 1 is not own shader
         self.project_changed = False        # will contain if sth. has changed
         self.textureRepo.cleanup()
         self.cachedInfo = []                # cached data 
@@ -272,9 +273,15 @@ class programInfo():
         return dumper(self)
 
     def setVerboseBit(self, bit):
+        if bit == 0:
+            bit = (1 << len(self.helpVerbose())) -1
+
         self.verbose |= bit
 
     def resetVerboseBit(self, bit):
+        if bit == 0:
+            bit = (1 << len(self.helpVerbose())) -1
+
         self.verbose &= ~bit
 
     def helpVerbose(self):
@@ -309,7 +316,7 @@ class programInfo():
         used to create filenames compatible for Windows and Linux
         """
         path = path.lower()
-        return re.sub('[^a-z0-9_+=-]', "_", path)
+        return re.sub(r'[^a-z0-9_+=-]', "_", path)
 
     def developmentPyCacheCleanup(self):
         purged_paths = []
@@ -427,6 +434,10 @@ class programInfo():
             return False
         self.release_info = c
 
+        # decide im macros should be calculated in parallel
+        #
+        self.parslide = "parallelmacro" in self.release_info and self.release_info["parallelmacro"] is True
+
         if os.path.isfile(self.path_userconf):
             c = self.readJSON(self.path_userconf)
             if c is None:
@@ -503,6 +514,7 @@ class programInfo():
 
         # read last session on demand
         #
+        self.logLine(1, "Initializing Makehuman2, Slider-parallel mode used: " + str(self.parslide))
         self.loadSession()
         return True
 
